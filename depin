@@ -1,0 +1,40 @@
+#!/bin/bash
+
+dependencies_file="$1"
+package_manager="$2"
+
+# parse_yaml function by Stefan Farestam, with a small change by me
+function parse_yaml {
+   local prefix=$2
+   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+   sed -ne "s|^\($s\):|\1|" \
+        -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+   awk -F$fs '{
+      indent = length($1)/2;
+      vname[indent] = $2;
+      for (i in vname) {if (i > indent) {delete vname[i]}}
+      if (length($3) > 0) {
+         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+         if (length(vn) == 0) {
+           vn=$2"_"
+           $2="other"
+         }
+         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+      }
+   }'
+}
+
+parse_result="$(parse_yaml "$dependencies_file" "DEP_")"
+
+eval $parse_result
+
+while IFS="" read -r line; do
+  varname="DEP_${line}_${package_manager%% *}"
+  if [[ -z "${!varname}" ]]; then
+    varname="DEP_${line}_other"
+  fi
+
+  # Install
+  eval "$package_manager ${!varname}"
+done <<< "$(echo -e "$parse_result" | sed -E 's/^DEP_([^_]*).*/\1/' | awk '!a[$0]++')"
