@@ -1,7 +1,7 @@
 #!/bin/bash
 
 dependencies_file="$1"
-package_manager="$2"
+package_manager="${2:-}"
 
 # parse_yaml function by Stefan Farestam, with a small change by me
 function parse_yaml {
@@ -30,11 +30,10 @@ parse_result="$(parse_yaml "$dependencies_file" "DEP_")"
 eval $parse_result
 
 while IFS="" read -r line; do
-  varname="DEP_${line}_${package_manager%% *}"
+  varname="DEP_${line}_${package_manager}"
   if [[ -z "${!varname}" ]]; then
     varname="DEP_${line}_other"
   fi
 
-  # Install
-  eval "$package_manager ${!varname}"
+  echo "${!varname}"
 done <<< "$(echo -e "$parse_result" | sed -E 's/^DEP_([^_]*).*/\1/' | awk '!a[$0]++')"
