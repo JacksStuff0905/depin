@@ -1,4 +1,26 @@
 #!/bin/bash
+VERSION="1.0"
+SELF="$(basename "$0")"
+
+version() {
+  echo -e "$SELF version $VERSION"
+}
+
+usage() {
+  echo -e "USAGE:\n\n\t$SELF DEPENDENCIES_FILE PACKAGE_MANAGER\n"
+}
+
+options() {
+  echo -e "OPTIONS\n"
+  echo -e "\t-V, --version\t\tShow $SELF version number"
+  echo -e "\t-h, --help\t\tShow this help"
+}
+
+help() {
+  version
+  usage
+  options
+}
 
 dependencies_file="$1"
 package_manager="${2:-}"
@@ -24,6 +46,30 @@ function parse_yaml {
       }
    }'
 }
+
+# Main logic
+if [ $# -le 0 ]; then
+  help
+  exit 0
+fi
+
+while [[ "$1" == -* ]]; do
+  case "$1" in
+    -h|--help)
+      help
+      exit 0
+      ;;
+    -V|--version)
+      version
+      exit 0
+      ;;
+    --)
+      shift
+      break
+      ;;
+  esac
+  shift
+done
 
 parse_result="$(parse_yaml "$dependencies_file" "DEP_")"
 
