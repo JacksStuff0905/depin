@@ -1,6 +1,6 @@
 # DepIn (dependency installer)
 
-depin is a simple bash script designed as a tool for installing required packages from a dotfile (config file) repository.
+depin is a simple bash script designed as a tool for helping with installing required packages from a dotfile (config file) repository.
 It can read all the dependencies from a simple YAML file and in case a package has different names in different software repositories it can automatically select the correct one if configured properly.
 
 Depin doesn't perform any permanent operations on the system, it only prints the package names to the output, which then can be used by a package manager. This makes it rather safe to use but still:
