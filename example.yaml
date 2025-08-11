@@ -1,5 +1,6 @@
 nvim: neovim
 
+git
 
 ripgrep:
   apt: rg

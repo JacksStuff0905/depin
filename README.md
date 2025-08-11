@@ -61,6 +61,12 @@ package2: pkg2
 ```
 which will give the same result.
 
+Moreover, you can just use the shortest syntax of
+```
+pkg3
+```
+which will be parsed as `pkg3: pkg3`. If you use this syntax, it's important NOT to put a colon `:` at the end of the line.
+
 So, the complete config file would look like this:
 ```
 package1:
@@ -69,12 +75,15 @@ package1:
     other: package1
 
 package2: pkg2
+
+pkg3
 ```
 
 *Real world example:*
 ```
 neovim: neovim
-git: git
+
+git
 
 ripgrep:
     apt: rg
