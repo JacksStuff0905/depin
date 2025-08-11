@@ -25,26 +25,45 @@ help() {
 dependencies_file="$1"
 package_manager="${2:-}"
 
-# parse_yaml function by Stefan Farestam, with a small change by me
+# parse_yaml function by Stefan Farestam, with some small changes by me
 function parse_yaml {
-   local prefix=$2
-   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
-   sed -ne "s|^\($s\):|\1|" \
-        -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
-        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
-   awk -F$fs '{
+  local prefix=$2
+  local s='[[:space:]]*' w='[^ ]*' fs=$(echo @|tr @ '\034')
+
+ sed -ne "s|^\($s\):|\1|
+   s|^\($s\)\($w\)$s\(:\)$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\4$fs\3|p
+    t end
+    s|^\($s\)\($w\)$s\(:\)$s\(.*\)$s\$|\1$fs\2$fs\4$fs\3|p
+    t end
+    /:/! s|^\($s\)\($w\)$s$|\1$fs\2|p
+    t end
+    :end
+    " "$1" |
+  awk -F$fs '{
       indent = length($1)/2;
       vname[indent] = $2;
       for (i in vname) {if (i > indent) {delete vname[i]}}
-      if (length($3) > 0) {
-         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
-         if (length(vn) == 0) {
-           vn=$2"_"
-           $2="other"
-         }
-         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
-      }
-   }'
+        if (length($3) == 0) {
+          $3 = $2
+          if ($4 == ":") {
+            next
+          }
+        }
+      vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])(" ")}
+
+    gsub(/[^A-Za-z0-9 ]/, "0", vn)
+    gsub(/[^A-Za-z0-9]/, "0", $2)
+
+    gsub(" ", "_", vn)
+
+    if (length(vn) == 0) {
+      vn=$2"_"
+      $2="other"
+    }
+
+
+    printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+  }'
 }
 
 # Main logic
@@ -75,11 +94,15 @@ parse_result="$(parse_yaml "$dependencies_file" "DEP_")"
 
 eval $parse_result
 
+result=""
+
 while IFS="" read -r line; do
   varname="DEP_${line}_${package_manager}"
   if [[ -z "${!varname}" ]]; then
     varname="DEP_${line}_other"
   fi
 
-  echo "${!varname}"
+  result="$result$(echo -n "${!varname}") "
 done <<< "$(echo -e "$parse_result" | sed -E 's/^DEP_([^_]*).*/\1/' | awk '!a[$0]++')"
+
+echo "$result" | sed 's/[[:space:]]+/ /g'
