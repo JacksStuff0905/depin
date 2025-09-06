@@ -55,13 +55,13 @@ If there's no need to specify different package names, e.g. all software reposit
 package2:
     other: pkg2
 ```
-you can use the shorthand syntax of
+you can use the shorthand syntax
 ```
 package2: pkg2
 ```
 which will give the same result.
 
-Moreover, you can just use the shortest syntax of
+Moreover, you can just use the shortest syntax
 ```
 pkg3
 ```
@@ -81,7 +81,7 @@ pkg3
 
 *Real world example:*
 ```
-neovim: neovim
+nvim: neovim
 
 git
 
